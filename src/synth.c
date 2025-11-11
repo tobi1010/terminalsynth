@@ -1,5 +1,6 @@
 #include "synth.h"
 #include "input_backend.h"
+#include "input_keymap.h"
 #include "oscillator.h"
 #include "synth_utils.h"
 #include <stdint.h>
