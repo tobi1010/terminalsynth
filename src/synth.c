@@ -22,26 +22,28 @@ void synth_init(SynthState *s, KeyboardState *kb_state, double sample_rate,
 
 void synth_update(SynthState *s) {
     KeyboardState *kb = s->kb_state;
-    for (int i = 0; i < (int)key_note_map_len; i++) {
-        uint8_t was = kb->prev[key_note_map[i].key];
-        uint8_t now = kb->keys[key_note_map[i].key];
+    for (int key = 0; key < MAX_KEY_CODE; key++) {
+        uint8_t midi_note = get_midi_from_keycode((uint8_t)key);
+        if (midi_note == MIDI_NOTE_INVALID)
+            continue;
+        uint8_t was = kb->prev[key];
+        uint8_t now = kb->keys[key];
+        // key pressed
         if (now && !was) {
             for (int j = 0; j < s->num_osc; j++) {
                 if (s->osc[j].amp == 0.0) {
-                    s->osc[j].freq =
-                        midi_to_freq(key_note_map[i].midi_note, s->tuning);
+                    s->osc[j].freq = midi_to_freq(midi_note, s->tuning);
                     s->osc[j].amp = s->volume;
-                    s->osc[j].note = key_note_map[i].midi_note;
+                    s->osc[j].note = midi_note;
                     printf("%d", j);
                     break;
                 }
             }
         }
+        // key released
         if (!now && was) {
             for (int j = 0; j < s->num_osc; j++) {
-                if (s->osc[j].note == key_note_map[i].midi_note) {
-                    s->osc[j].freq =
-                        midi_to_freq(key_note_map[i].midi_note, s->tuning);
+                if (s->osc[j].note == midi_note) {
                     s->osc[j].amp = 0.0;
                     s->osc[j].note = 0;
                     break;
@@ -49,7 +51,7 @@ void synth_update(SynthState *s) {
             }
         }
 
-        kb->prev[key_note_map[i].key] = now;
+        kb->prev[key] = now;
     }
 }
 
